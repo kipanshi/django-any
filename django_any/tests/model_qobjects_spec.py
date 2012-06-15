@@ -23,7 +23,7 @@ class RelatedToQObject(models.Model):
 
 class QObjectsSupport(TestCase):
     def setUp(self):
-        self.related = any_model(QObjectRelated)
+        self.related = any_model(QObjectRelated, flag=False)
 
     def test_qobject_specification(self):
         result = any_model(RelatedToQObject, related=Q(pk=self.related.pk))
@@ -35,7 +35,7 @@ class QObjectsSupport(TestCase):
 
         """
         # Create additional related instance
-        any_model(QObjectRelated)
+        any_model(QObjectRelated, flag=False)
 
         result = any_model(RelatedToQObject, related=Q(flag=False))
         self.assertIn(result.related, list(QObjectRelated.objects.all()))

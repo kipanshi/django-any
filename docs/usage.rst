@@ -73,6 +73,9 @@ to select values for fields from db::
      order = any_model(Order, customer__location=Q(country='US'))
      
 It will create an order for existing customer, whose country is US.
+In case Q lookup returns multiple objects, random object from the lookup
+will be used for the related field.
+
 
 
 Custom model fields
