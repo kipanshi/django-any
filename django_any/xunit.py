@@ -145,4 +145,3 @@ def any_decimal(min_value=Decimal(0), max_value=Decimal('99.99'), decimal_places
     return Decimal(str(any_float(min_value=float(min_value),
                                  max_value=float(max_value),
                                  precision=decimal_places)))
-

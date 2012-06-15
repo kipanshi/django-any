@@ -7,9 +7,9 @@ import re, os, random
 from decimal import Decimal
 from datetime import date, datetime, time
 from string import ascii_letters, digits
-from random import choice
+from random import choice, randint
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core import validators
 from django.db import models, IntegrityError
 from django.db.models import Q
@@ -430,7 +430,14 @@ def _fill_model_fields(model, **kwargs):
                 Lookup ForeingKey field in db
                 """
                 key_field = model._meta.get_field(field.name)
-                value = key_field.rel.to.objects.get(kwargs[field.name])
+                # Handle situation if lookup returns multiple objects
+                try:
+                    value = key_field.rel.to.objects.get(kwargs[field.name])
+                except MultipleObjectsReturned:
+                    queryset = key_field.rel.to.objects.filter(
+                                                        kwargs[field.name])
+                    queryset_count = queryset.count()
+                    value = queryset[randint(0, queryset_count - 1)]
                 setattr(model, field.name, value)
             else:
                 # TODO support any_model call

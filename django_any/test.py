@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import time, random
-from unittest import _strclass
+import time
+import random
 from django import forms
 from django_any import any_form
 from django.test.client import Client as DjangoClient
@@ -113,8 +113,12 @@ class WithTestDataSeed(type):
     def __new__(cls, cls_name, bases, attrs):
         attrs['__django_any_seed'] = 0
 
-        def shortDescription(self):            
-            return "%s (%s) With seed %s" % (self._testMethodName,  _strclass(self.__class__), getattr(self, '__django_any_seed'))
+        def shortDescription(self):
+            return "%s (%s.%s) With seed %s" % \
+                (self._testMethodName,
+                 self.__module__,
+                 self.__class__.__name__,
+                 getattr(self, '__django_any_seed'))
 
         for name, func in attrs.items():
             if name.startswith('test') and hasattr(func, '__call__'):
@@ -125,8 +129,7 @@ class WithTestDataSeed(type):
 
                 for seed in getattr(func, '__django_any_with_seed', []):
                     attrs['%s_%d' % (name, seed)] = set_seed(func, seed)
-                
+
         testcase = super(WithTestDataSeed, cls).__new__(cls, cls_name, bases, attrs)
         testcase.shortDescription = shortDescription
         return testcase
-    
