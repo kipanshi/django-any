@@ -21,10 +21,12 @@ class SimpleModel(models.Model):
     null_boolead_field = models.NullBooleanField()
     positive_integer_field = models.PositiveIntegerField()
     small_integer = models.PositiveSmallIntegerField()
-    slig_field = models.SlugField()
+    slug_field = models.SlugField()
     text_field = models.TextField()
     time_field = models.TimeField()
     url_field = models.URLField(verify_exists=False)
+    file_field = models.FileField(upload_to='sample_subdir')
+    image_field = models.ImageField(upload_to='sample_subdir')
 
     class Meta:
         app_label = 'django_any'
@@ -33,13 +35,17 @@ class SimpleModel(models.Model):
 class SimpleCreation(TestCase):
     def test_model_creation_succeed(self):
         result = any_model(SimpleModel)
-        
+
         self.assertEqual(type(result), SimpleModel)
+        self.assertEqual(len(result._meta.fields), len(SimpleModel._meta.local_fields))
 
-        for field in result._meta.fields:
+        for field, original_field in zip(result._meta.fields, SimpleModel._meta.local_fields):
             value = getattr(result, field.name)
-        self.assertTrue(value is not None, "%s is uninitialized" % field.name)
+            if field.name != 'null_boolead_field':
+                self.assertTrue(value is not None, "%s is uninitialized" % field.name)
+            self.assertTrue(isinstance(field, original_field.__class__), "%s has correct field type" % field.name)
 
-    def _test_partial_specification(self):
+    def test_partial_specification(self):
         result = any_model(SimpleModel, char_field='test')
         self.assertEqual(result.char_field, 'test')
+

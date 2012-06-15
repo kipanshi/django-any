@@ -1,6 +1,7 @@
 # -*- coding: utf-8; mode: django -*-
 from django.conf.urls.defaults import patterns, include
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django_any.test import Client
 
@@ -46,6 +47,14 @@ class DjangoAnyClient(TestCase):
 
         response = self.client.get('/admin/')
         self.assertEquals(200, response.status_code)
+
+    def test_login_as_custom_user(self):
+        user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+        self.assertTrue(self.client.login_as(user=user))
+
+    def test_login_as_failed(self):
+        user = None
+        self.assertRaises(AssertionError, self.client.login_as, user=user)
 
     def test_post_any_data(self):
         response = self.client.post_any_data('/view/')

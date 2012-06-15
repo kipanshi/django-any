@@ -21,6 +21,14 @@ class BaseModel(models.Model):
         app_label = 'django_any'
 
 
+class SelfReferencingModel(models.Model):
+    name = models.CharField(max_length=5)
+    parent = models.ForeignKey('self', null=True, blank=True)
+
+    class Meta:
+        app_label = 'django_any'
+
+
 class ForeignKeyCreation(TestCase):
     def test_fk_relation_autocreate(self):
         result = any_model(BaseModel)
@@ -34,3 +42,10 @@ class ForeignKeyCreation(TestCase):
         result = any_model(BaseModel, related__name='test')
         self.assertEqual(result.related.name, 'test')
 
+    def test_fk_referencing_self(self):
+        self_referencing = any_model(SelfReferencingModel)
+        self.assertTrue(self_referencing.parent is None)
+
+        root = any_model(SelfReferencingModel)
+        child = any_model(SelfReferencingModel, parent=root)
+        self.assertEqual(type(child.parent), SelfReferencingModel)

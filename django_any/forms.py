@@ -11,6 +11,14 @@ from django.utils import formats
 from django_any import xunit
 from django_any.functions import valid_choices, split_model_kwargs, \
     ExtensionMethod
+from django.core.validators import validate_ipv4_address
+from string import hexdigits
+
+try:
+    from django.core.validators import validate_ipv6_address, validate_ipv46_address
+except ImportError:
+    validate_ipv6_address = None
+    validate_ipv46_address = None
 
 any_form = ExtensionMethod()
 any_form_field = ExtensionMethod()
@@ -252,6 +260,47 @@ def ipaddress_field_data(field, **kwargs):
         nums = [str(xunit.any_int(min_value=0, max_value=255)) for _ in xrange(0, 4)]
         return ".".join(nums)
 
+if validate_ipv6_address:
+    @any_form_field.register(forms.GenericIPAddressField)
+    def generic_ipaddress_field_data(field, **kwargs):
+        """
+        Return random value for GenericIPAddressField
+
+        >>> ipv4_address = any_form_field(forms.GenericIPAddressField(protocol='ipv4'))
+        >>> type(ipv4_address)
+        <type 'str'>
+        >>> from django.core.validators import ipv4_re
+        >>> import re
+        >>> re.match(ipv4_re, ipv4_address) is not None
+        True
+        >>> ipv6_address = any_form_field(forms.GenericIPAddressField(protocol='ipv6'))
+        >>> type(ipv6_address)
+        <type 'str'>
+        >>> from django.utils.ipv6 import is_valid_ipv6_address
+        >>> is_valid_ipv6_address(ipv6_address) is True
+        True
+        >>> ipv46_address = any_form_field(forms.GenericIPAddressField())
+        >>> type(ipv46_address)
+        <type 'str'>
+        >>> from django.core.validators import validate_ipv46_address
+        >>> validate_ipv46_address(ipv46_address) is True
+        False
+        """
+        if field.default_validators == [validate_ipv46_address]:
+            protocol = random.choice(('ipv4', 'ipv6'))
+        elif field.default_validators == [validate_ipv4_address]:
+            protocol = 'ipv4'
+        elif field.default_validators == [validate_ipv6_address]:
+            protocol = 'ipv6'
+        else:
+            raise Exception('Unexpected validators')
+
+        if protocol == 'ipv4':
+            return ipaddress_field_data(field)
+        if protocol == 'ipv6':
+            nums = [str(xunit.any_string(hexdigits, min_length=4, max_length=4)) for _ in xrange(0, 8)]
+            return ":".join(nums)
+
 
 @any_form_field.register(forms.NullBooleanField)
 def null_boolean_field_data(field, **kwargs):
@@ -281,7 +330,7 @@ def slug_field_data(field, **kwargs):
     True
     """
     min_length = kwargs.get('min_length', 1)
-    max_length = kwargs.get('max_length', field.max_length or 20)    
+    max_length = kwargs.get('max_length', field.max_length or 20)
     
     from string import ascii_letters, digits
     letters = ascii_letters + digits + '_-' 

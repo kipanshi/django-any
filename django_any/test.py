@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import random
+
 from django import forms
 from django_any import any_form
 from django.test.client import Client as DjangoClient
@@ -35,7 +36,15 @@ def _request_context_forms(context):
 class Client(DjangoClient):
     def login_as(self, **kwargs):
         password = xunit.any_string()
-        user = any_user(password=password, **kwargs)
+        if 'user' in kwargs:
+            user = kwargs['user']
+            try:
+                user.set_password(password)
+                user.save()
+            except Exception:
+                raise AssertionError('Bad user object')
+        else:
+            user = any_user(password=password, **kwargs)
 
         if self.login(username=user.username, password=password):
             return user
@@ -96,7 +105,7 @@ def with_seed(seed):
 
 def set_seed(func, seed=None):
     """
-    Set randon seed before executing function. If seed is 
+    Set randon seed before executing function. If seed is
     not provided current timestamp used
     """
     def _wrapper(self, seed=seed, *args, **kwargs):
@@ -117,7 +126,7 @@ class WithTestDataSeed(type):
             return "%s (%s.%s) With seed %s" % \
                 (self._testMethodName,
                  self.__module__,
-                 self.__class__.__name__,
+                 self.__name__,
                  getattr(self, '__django_any_seed'))
 
         for name, func in attrs.items():

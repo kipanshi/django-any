@@ -20,10 +20,10 @@ def split_model_kwargs(kw):
     django_any birds language parser
     """
     from collections import defaultdict
-    
+
     model_fields = {}
     fields_agrs = defaultdict(lambda : {})
-    
+
     for key in kw.keys():
         if '__' in key:
             field, _, subfield = key.partition('__')
@@ -46,7 +46,7 @@ class ExtensionMethod(object):
     def register(self, field_type, impl=None):
         """
         Register form field data function.
-        
+
         Could be used as decorator
         """
         def _wrapper(func):
@@ -56,7 +56,7 @@ class ExtensionMethod(object):
         if impl:
             return _wrapper(impl)
         return _wrapper
-    
+
     def register_default(self, func):
         self.default = func
         return func
@@ -86,6 +86,11 @@ class ExtensionMethod(object):
         function = self.registry.get(field_type, self.default)
 
         if function is None:
+            for parent in field_type.__mro__[1:]:
+
+                # Try to find a match in the parents.
+                if parent in self.registry:
+                    return self.registry[parent](*args, **kwargs)
             raise TypeError("no match %s" % field_type)
 
         return function(*args, **kwargs)

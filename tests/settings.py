@@ -10,9 +10,13 @@ INSTALLED_APPS = ( 'django.contrib.auth',
                    'django.contrib.sites',
                    'django.contrib.admin',
                    'django_jenkins',) + PROJECT_APPS
-DATABASE_ENGINE = 'sqlite3'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+    }
+}
 TEMPLATE_LOADERS = (
-    'django.template.loaders.app_directories.load_template_source',
+    'django.template.loaders.app_directories.Loader',
 )
 ROOT_URLCONF = 'tests.test_runner'
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')

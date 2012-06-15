@@ -38,4 +38,4 @@ class QObjectsSupport(TestCase):
         any_model(QObjectRelated)
 
         result = any_model(RelatedToQObject, related=Q(flag=False))
-        self.assertEqual(self.related, result.related)
+        self.assertIn(result.related, list(QObjectRelated.objects.all()))
